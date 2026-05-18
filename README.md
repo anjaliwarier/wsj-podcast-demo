@@ -10,58 +10,7 @@ This agent acts as an Editorial Assistant and Financial AI Producer to autonomou
 
 This diagram outlines the end-to-end flow from ingestion to secure delivery, illustrating the orchestration layer, enterprise storage, and external API integrations.
 
-```mermaid
-flowchart TB
-    %% Classes & Styles
-    classDef agent fill:#e3f2fd,stroke:#0d47a1,stroke-width:1.5px;
-    classDef service fill:#f1f8e9,stroke:#33691e,stroke-width:1.5px;
-    classDef storage fill:#fff3e0,stroke:#e65100,stroke-width:1.5px;
-
-    %% Node Definitions
-    User([User / CLI Client])
-    
-    subgraph Runtime [Gemini Enterprise Agent Platform Runtime]
-        Agent[WSJ Podcast Agent <br> Latest Gemini GA Model]
-        Memory[(Memory Bank <br> Session State)]
-    end
-
-    subgraph Ingestion [1. Ingestion & Filtering]
-        EmailService[Synthetic WSJ Email Generator <br> Latest Gemini GA Model]
-        Extractor[Content Filter & Script Creator <br> Latest Gemini GA Model]
-    end
-
-    subgraph AudioGen [2. Podcast Production]
-        PodcastAPI[Google Podcast API <br> Discovery Engine REST]
-    end
-
-    subgraph Distribution [3. Storage & Delivery]
-        GCS[(GCS Staging Bucket <br> &lt;YOUR_GCS_BUCKET&gt;)]
-        SignedURL[Secure Signed URL <br> 7-Day Token]
-        SMTP[SMTP Email Notification]
-    end
-
-    %% Relationships & Flow
-    User -->|1. Trigger Session| Agent
-    Agent <-->|Manage State| Memory
-    
-    Agent -->|2. Ingest| EmailService
-    EmailService -->|Raw Bulletins| Extractor
-    Extractor -->|Clean Editorial Transcript| Agent
-    
-    Agent -->|3. Synthesize Audio| PodcastAPI
-    PodcastAPI -->|MP3 Binary Stream| Agent
-    
-    Agent -->|4. Stage Binary| GCS
-    GCS -->|5. Secure Sign| SignedURL
-    Agent -->|6. Send Delivery Email| SMTP
-    SignedURL -->|Encrypted Audio Link| SMTP
-    SMTP -->|7. Stream Briefing| User
-
-    %% Apply Styling Classes
-    class Agent,Memory agent;
-    class EmailService,Extractor,PodcastAPI service;
-    class GCS,SignedURL,SMTP storage;
-```
+![System Architecture Infographic](assets/podcast_agent_architecture.png)
 
 ### End-to-End Operational Flow
 1. **Ingestion**: The agent triggers the `ingest_recent_wsj_emails` tool to retrieve the 5 most recent front-page news items. By default, this leverages our high-fidelity simulated news generator powered by the latest Gemini GA model.
