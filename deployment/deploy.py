@@ -72,7 +72,7 @@ def main(argv: list[str]) -> None:
     project_id = (
         FLAGS.project_id
         if FLAGS.project_id
-        else os.getenv("GOOGLE_CLOUD_PROJECT", "warier-agents")
+        else os.getenv("GOOGLE_CLOUD_PROJECT")
     )
     location = (
         FLAGS.location if FLAGS.location else os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -80,7 +80,7 @@ def main(argv: list[str]) -> None:
     bucket = (
         FLAGS.bucket
         if FLAGS.bucket
-        else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET", "warier-agents-podcast-bucket")
+        else os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
     )
 
     print(f"PROJECT ID: {project_id}")

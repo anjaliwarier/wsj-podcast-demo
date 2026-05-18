@@ -23,7 +23,7 @@ def generate_synthetic_wsj_emails() -> list[dict]:
     """
     logger.info("Generating synthetic WSJ front-page email bulletins...")
     
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "warier-agents")
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     
     prompt = """

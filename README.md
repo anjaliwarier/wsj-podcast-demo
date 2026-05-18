@@ -35,7 +35,7 @@ flowchart TB
     end
 
     subgraph Distribution [3. Storage & Delivery]
-        GCS[(GCS Staging Bucket <br> warier-agents)]
+        GCS[(GCS Staging Bucket <br> &lt;YOUR_GCS_BUCKET&gt;)]
         SignedURL[Secure Signed URL <br> 7-Day Token]
         SMTP[SMTP Email Notification]
     end
@@ -67,7 +67,7 @@ flowchart TB
 1. **Ingestion**: The agent triggers the `ingest_recent_wsj_emails` tool to retrieve the 5 most recent front-page news items. By default, this leverages our high-fidelity simulated news generator powered by the latest Gemini GA model.
 2. **Extraction & Cleaning**: The `parse_clean_journalistic_text` tool invokes the latest Gemini GA model to strip all advertising, email signatures, and headers, leaving strictly core journalistic prose structured as a conversational podcast script.
 3. **Audio Generation**: The agent calls the Google Podcast API (`discoveryengine.googleapis.com`) to synthesize a professional, studio-quality conversational MP3 briefing.
-4. **Staging & Signing**: The MP3 binary is uploaded to the **`warier-agents`** GCS bucket. The GCS client generates an HMAC-SHA256 time-bounded Signed URL (valid for 7 days) that securely bypasses GCS ACL restrictions.
+4. **Staging & Signing**: The MP3 binary is uploaded to your configured GCS bucket. The GCS client generates an HMAC-SHA256 time-bounded Signed URL (valid for 7 days) that securely bypasses GCS ACL restrictions.
 5. **Dispatch**: A rich HTML email is sent to the subscriber containing the secure signed URL for immediate streaming.
 
 ---
@@ -116,7 +116,7 @@ pip install -r requirements.txt
 
 Configure the target GCS bucket in your `.env`:
 ```ini
-GOOGLE_CLOUD_STORAGE_BUCKET=warier-agents
+GOOGLE_CLOUD_STORAGE_BUCKET=<YOUR_GCS_STAGING_BUCKET>
 ```
 
 ### 2. Run Local Demonstration Pipeline
@@ -128,11 +128,11 @@ python run_pipeline.py
 ### 3. IAM Setup for Secure GCS URL Signing
 Because corporate organizational policies (`constraints/iam.disableServiceAccountKeyCreation`) prevent downloading raw JSON key files, the agent uses secure **keyless Service Account Impersonation** to cryptographically sign GCS URLs.
 
-To enable this in your environment, grant your active CLI user (`admin@anjaliwarier.altostrat.com`) the token creator role on the podcast agent's service account:
+To enable this in your environment, grant your active CLI user (`<YOUR_USER_EMAIL>`) the token creator role on the podcast agent's service account:
 ```bash
 gcloud iam service-accounts add-iam-policy-binding \
-    podcast-agent-sa@warier-agents.iam.gserviceaccount.com \
-    --member="user:admin@anjaliwarier.altostrat.com" \
+    podcast-agent-sa@<YOUR_GCP_PROJECT_ID>.iam.gserviceaccount.com \
+    --member="user:<YOUR_USER_EMAIL>" \
     --role="roles/iam.serviceAccountTokenCreator"
 ```
 
