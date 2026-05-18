@@ -1,6 +1,6 @@
 # 🎙️ Wall Street Journal Front Page Automated Podcast Agent
 
-An enterprise-grade, serverless autonomous agent built natively on the **Gemini Enterprise Agent Platform** using the **Agent Development Kit (ADK)** (`google.adk`) and deployed to the **Vertex AI Agent Runtime (Reasoning Engines)**. 
+An enterprise-grade, serverless autonomous agent built natively on the **Gemini Enterprise Agent Platform** using the **Agent Development Kit (ADK)** (`google.adk`) and deployed to the **Gemini Enterprise Agent Platform Runtime**. 
 
 This agent acts as an expert Google Cloud Architect and Financial AI Producer to autonomously ingest synthetic Wall Street Journal front-page emails, strip promotional boilerplate, generate studio-quality conversational podcast briefings using the **Google Podcast API**, and distribute time-limited secure signed streaming links.
 
@@ -20,14 +20,14 @@ flowchart TB
     %% Node Definitions
     User([User / CLI Client])
     
-    subgraph Runtime [Vertex AI Agent Runtime]
-        Agent[WSJ Podcast Agent <br> Gemini 2.5 Pro]
+    subgraph Runtime [Gemini Enterprise Agent Platform Runtime]
+        Agent[WSJ Podcast Agent <br> Latest Gemini GA Model]
         Memory[(Memory Bank <br> Session State)]
     end
 
     subgraph Ingestion [1. Ingestion & Filtering]
-        EmailService[Synthetic WSJ Email Generator <br> Gemini 2.0 Flash]
-        Extractor[Content Filter & Script Creator <br> Gemini 2.5 Pro]
+        EmailService[Synthetic WSJ Email Generator <br> Latest Gemini GA Model]
+        Extractor[Content Filter & Script Creator <br> Latest Gemini GA Model]
     end
 
     subgraph AudioGen [2. Podcast Production]
@@ -64,8 +64,8 @@ flowchart TB
 ```
 
 ### End-to-End Operational Flow
-1. **Ingestion**: The agent triggers the `ingest_recent_wsj_emails` tool to retrieve the 5 most recent front-page news items. By default, this leverages our high-fidelity Gemini 2.0 Flash synthetic news generator.
-2. **Extraction & Cleaning**: The `parse_clean_journalistic_text` tool invokes a tailored Gemini 2.5 Pro prompt that strips all advertising, email signatures, and headers, leaving strictly core journalistic prose structured as a conversational podcast script.
+1. **Ingestion**: The agent triggers the `ingest_recent_wsj_emails` tool to retrieve the 5 most recent front-page news items. By default, this leverages our high-fidelity simulated news generator powered by the latest Gemini GA model.
+2. **Extraction & Cleaning**: The `parse_clean_journalistic_text` tool invokes the latest Gemini GA model to strip all advertising, email signatures, and headers, leaving strictly core journalistic prose structured as a conversational podcast script.
 3. **Audio Generation**: The agent calls the Google Podcast API (`discoveryengine.googleapis.com`) to synthesize a professional, studio-quality conversational MP3 briefing.
 4. **Staging & Signing**: The MP3 binary is uploaded to the **`warier-agents`** GCS bucket. The GCS client generates an HMAC-SHA256 time-bounded Signed URL (valid for 7 days) that securely bypasses GCS ACL restrictions.
 5. **Dispatch**: A rich HTML email is sent to the subscriber containing the secure signed URL for immediate streaming.
@@ -74,12 +74,11 @@ flowchart TB
 
 ## 🛠️ Key Technologies & GCP Services
 
-- **Vertex AI Agent Runtime (Reasoning Engines)**: Serverless execution runtime hosting our ADK agent with managed session-based persistence.
+- **Gemini Enterprise Agent Platform Runtime**: Serverless execution runtime hosting our ADK agent with managed session-based persistence.
 - **Agent Development Kit (`google.adk`)**: The native Google Cloud agent SDK used to bind memory-aware tools to stateful LLM flows.
-- **Gemini 2.5 Pro**: Enterprise-tier language model orchestrating deep reasoning, text parsing, and pipeline steps.
-- **Gemini 2.0 Flash**: Dynamic high-speed synthesis engine used to generate high-fidelity simulated media.
+- **Latest Gemini GA Model**: Enterprise-tier foundation model orchestrating deep reasoning, text parsing, and pipeline steps.
 - **Cloud Storage (`google-cloud-storage`)**: Stages audio files and generates secure, time-bound signed URLs.
-- **Cloud Trace & Vertex AI Observability**: Built-in tracing that automatically profiles step latencies and model tokens.
+- **Cloud Trace & Platform Observability**: Built-in tracing that automatically profiles step latencies and model tokens.
 
 ---
 
@@ -92,13 +91,13 @@ wsj_podcast_demo/
 ├── .env.example                # Configuration environment template
 ├── run_pipeline.py             # Demonstration script for local verification
 ├── deployment/
-│   ├── deploy.py               # Deploys ADK Agent as a serverless Reasoning Engine
+│   ├── deploy.py               # Deploys ADK Agent as a serverless Runtime Engine
 │   └── test_deployment.py      # CLI client for real-time streaming testing
 └── wsj_podcast_agent/
     ├── __init__.py             # Module initialization
     ├── agent.py                # Core ADK Agent & stateful Memory Bank Tools
     ├── services.py             # Content extraction, Podcast REST API, GCS, & SMTP clients
-    ├── synthetic_data_generator.py # Gemini 2.0 Flash synthetic news engine
+    ├── synthetic_data_generator.py # Gemini news engine
     └── .env                    # Submodule runtime settings
 ```
 
@@ -141,9 +140,9 @@ gcloud iam service-accounts add-iam-policy-binding \
 
 ## 🌍 Managed Serverless Cloud Deployment
 
-Deploy your agent directly to the **Vertex AI Agent Runtime** for managed execution.
+Deploy your agent directly to the **Gemini Enterprise Agent Platform Runtime** for managed execution.
 
-### Deploy to Reasoning Engines
+### Deploy to Runtime Engines
 ```bash
 python deployment/deploy.py --create
 ```
@@ -151,6 +150,6 @@ python deployment/deploy.py --create
 ### Query the Remote Serverless Session
 Once deployed, initiate an interactive, trace-monitored query stream using the returned resource ID:
 ```bash
-python deployment/test_deployment.py --resource_id=<REASONING_ENGINE_RESOURCE_ID>
+python deployment/test_deployment.py --resource_id=<RESOURCE_ID>
 ```
-All execution steps, latency, and tool invocations will automatically stream directly into **Google Cloud Trace** and **Vertex AI Observability**!
+All execution steps, latency, and tool invocations will automatically stream directly into **Google Cloud Trace** and **Platform Observability**!
