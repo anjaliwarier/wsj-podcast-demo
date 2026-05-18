@@ -14,7 +14,9 @@ This diagram outlines the end-to-end flow from ingestion to secure delivery, ill
 
 ### End-to-End Operational Flow
 1. **Ingestion**: The agent triggers the `ingest_recent_wsj_emails` tool to retrieve the 5 most recent front-page news items. By default, this leverages our high-fidelity simulated news generator powered by the latest Gemini GA model.
-2. **Extraction & Cleaning**: The `parse_clean_journalistic_text` tool invokes the latest Gemini GA model to strip all advertising, email signatures, and headers, leaving strictly core journalistic prose structured as a conversational podcast script.
+2. **Extraction & Cleaning**: The `parse_clean_journalistic_text` tool invokes the latest Gemini GA model using the strict system prompt:
+   > *"You are an editorial assistant. Here are 5 emails containing Wall Street Journal articles. Strip out all email formatting, disclaimers, and metadata. Extract only the core journalistic text."*
+   This converts the raw content into a structured JSON brief featuring the clean conversational script.
 3. **Audio Generation**: The agent calls the Google Podcast API (`discoveryengine.googleapis.com`) to synthesize a professional, studio-quality conversational MP3 briefing.
 4. **Staging & Signing**: The MP3 binary is uploaded to your configured GCS bucket. The GCS client generates an HMAC-SHA256 time-bounded Signed URL (valid for 7 days) that securely bypasses GCS ACL restrictions.
 5. **Dispatch**: A rich HTML email is sent to the subscriber containing the secure signed URL for immediate streaming.
