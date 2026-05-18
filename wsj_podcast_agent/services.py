@@ -38,15 +38,9 @@ def filter_journalistic_content(emails: list[dict]) -> str:
     )
     
     prompt = f"""
-    You are an expert journalistic text parser and financial analysis AI.
-    Below are multiple Wall Street Journal front-page feature emails containing promotional
-    advertisements, headers, footers, and copyright boilerplate.
-    
-    Strip away all non-journalistic text. Extract ONLY the pure editorial reporting, data,
-    and analysis from each story. Structure them into a single continuous, comprehensive script
-    document optimized for generating an executive podcast briefing.
+    You are an editorial assistant. Here are 5 emails containing Wall Street Journal articles. Strip out all email formatting, disclaimers, and metadata. Extract only the core journalistic text.
 
-    Raw Articles:
+    Emails:
     {combined_text}
     """
     
