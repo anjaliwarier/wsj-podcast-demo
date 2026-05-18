@@ -11,39 +11,56 @@ This agent acts as an expert Google Cloud Architect and Financial AI Producer to
 This diagram outlines the end-to-end flow from ingestion to secure delivery, illustrating the orchestration layer, enterprise storage, and external API integrations.
 
 ```mermaid
-graph TD
-    %% Nodes
-    subgraph Client_Interface [Client & Trigger Layer]
-        A[User / CLI Client] -->|adk run / stream_query| B(Reasoning Engine Runtime)
+flowchart TB
+    %% Classes & Styles
+    classDef agent fill:#e3f2fd,stroke:#0d47a1,stroke-width:1.5px;
+    classDef service fill:#f1f8e9,stroke:#33691e,stroke-width:1.5px;
+    classDef storage fill:#fff3e0,stroke:#e65100,stroke-width:1.5px;
+
+    %% Node Definitions
+    User([User / CLI Client])
+    
+    subgraph Runtime [Vertex AI Agent Runtime]
+        Agent[WSJ Podcast Agent <br> Gemini 2.5 Pro]
+        Memory[(Memory Bank <br> Session State)]
     end
 
-    subgraph Enterprise_Agent [Vertex AI Agent Runtime / Reasoning Engines]
-        B -->|Tool Call 1| C[Ingest WSJ Bulletins]
-        B -->|Tool Call 2| D[Clean Editorial Parser]
-        B -->|Tool Call 3| E[Synthesize & Stage]
-        
-        C -->|Store state| F[(Managed Memory Bank)]
-        D -->|Store state| F
-        E -->|Store state| F
+    subgraph Ingestion [1. Ingestion & Filtering]
+        EmailService[Synthetic WSJ Email Generator <br> Gemini 2.0 Flash]
+        Extractor[Content Filter & Script Creator <br> Gemini 2.5 Pro]
     end
 
-    subgraph Synthesis_Engine [Generative AI & Media Synthesis Services]
-        C -.->|Mock/Live Gmail Ingest| G(Gmail API / Mock Queue)
-        D -->|Gemini 2.5 Pro Content Filter| H(Vertex AI GenAI)
-        E -->|POST /podcasts:generate| I(NotebookLM Enterprise Podcast API)
+    subgraph AudioGen [2. Podcast Production]
+        PodcastAPI[Google Podcast API <br> Discovery Engine REST]
     end
 
-    subgraph Storage_Distribution [Storage & Secure Distribution]
-        E -->|Stage MP3 Binary| J[(Google Cloud Storage - warier-agents)]
-        E -->|HMAC-SHA256 URL Sign| K[GCS Signed URL Generation]
-        E -->|SMTP Transport TLS| L[Outgoing Email Notification]
+    subgraph Distribution [3. Storage & Delivery]
+        GCS[(GCS Staging Bucket <br> warier-agents)]
+        SignedURL[Secure Signed URL <br> 7-Day Token]
+        SMTP[SMTP Email Notification]
     end
 
-    %% Styles & Classes
-    style Enterprise_Agent fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
-    style Synthesis_Engine fill:#f1f8e9,stroke:#33691e,stroke-width:2px
-    style Storage_Distribution fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    style Client_Interface fill:#ede7f6,stroke:#4a148c,stroke-width:2px
+    %% Relationships & Flow
+    User -->|1. Trigger Session| Agent
+    Agent <-->|Manage State| Memory
+    
+    Agent -->|2. Ingest| EmailService
+    EmailService -->|Raw Bulletins| Extractor
+    Extractor -->|Clean Editorial Transcript| Agent
+    
+    Agent -->|3. Synthesize Audio| PodcastAPI
+    PodcastAPI -->|MP3 Binary Stream| Agent
+    
+    Agent -->|4. Stage Binary| GCS
+    GCS -->|5. Secure Sign| SignedURL
+    Agent -->|6. Send Delivery Email| SMTP
+    SignedURL -->|Encrypted Audio Link| SMTP
+    SMTP -->|7. Stream Briefing| User
+
+    %% Apply Styling Classes
+    class Agent,Memory agent;
+    class EmailService,Extractor,PodcastAPI service;
+    class GCS,SignedURL,SMTP storage;
 ```
 
 ### End-to-End Operational Flow
