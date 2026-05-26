@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import google.auth
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.cloud import storage
+from google.cloud import texttospeech
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -69,71 +70,62 @@ def filter_journalistic_content(emails: list[dict]) -> str:
         
     return "\n\n".join(cleaned_articles)
 
-# -----------------------------------------------------------------------------
-# 2. Standalone Gemini Enterprise Podcast API Integration
-# -----------------------------------------------------------------------------
-def generate_podcast(extracted_text: str) -> dict:
+import asyncio
+from google.cloud import firestore
+
+def get_firestore_client():
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "warier-agents")
+    try:
+        return firestore.Client(project=project_id)
+    except Exception as e:
+        logger.warning(f"Could not initialize Firestore client: {e}")
+        return None
+
+async def generate_podcast(extracted_text: str) -> dict:
     """
-    Invokes the Google NotebookLM Enterprise Podcast API under Discovery Engine REST API.
-    Monitors operation to completion via polling projects.locations.podcasts.operations.get.
+    Invokes the Google Cloud Text-to-Speech API using async parallel processing.
     Includes full enterprise mock simulation mode for standard environments.
     """
-    logger.info("Executing Google Podcast API (Discovery Engine) synthesis...")
+    logger.info("Executing Google Cloud Text-to-Speech async synthesis...")
     use_mock = os.getenv("USE_SYNTHETIC_LOCAL_MOCK", "True").lower() == "true"
-    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "warier-agents")
-    location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     
     if not use_mock:
         try:
-            # Procure OAuth Credentials
-            credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-            credentials.refresh(GoogleAuthRequest())
+            client = texttospeech.TextToSpeechAsyncClient()
             
-            headers = {
-                "Authorization": f"Bearer {credentials.token}",
-                "Content-Type": "application/json"
-            }
+            # Using Journey voice for a professional podcast tone
+            voice = texttospeech.VoiceSelectionParams(
+                language_code="en-US",
+                name="en-US-Journey-F"
+            )
             
-            # Initiate Long Running Operation for Podcast Generation
-            api_url = f"https://discoveryengine.googleapis.com/v1/projects/{project_id}/locations/{location}/podcasts:generate"
-            logger.info(f"Triggering POST {api_url}")
-            payload = {
-                "podcastConfig": {
-                    "format": "MP3",
-                    "voiceTone": "PROFESSIONAL_JOURNALIST"
-                },
-                "sourceContent": {
-                    "inlineText": extracted_text
-                }
-            }
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.MP3
+            )
             
-            response = requests.post(api_url, json=payload, headers=headers)
-            if response.status_code in [200, 201, 202]:
-                op_data = response.json()
-                op_name = op_data.get("name")
-                logger.info(f"Successfully initiated Podcast long-running operation: {op_name}")
+            # Text-to-Speech API has a 5000 character limit per request.
+            # We split the text into chunks and synthesize concurrently!
+            max_chars = 4900
+            chunks = [extracted_text[i:i+max_chars] for i in range(0, len(extracted_text), max_chars)]
+            
+            logger.info(f"Dispatching {len(chunks)} TTS chunks concurrently...")
+            tasks = []
+            for chunk in chunks:
+                synthesis_input = texttospeech.SynthesisInput(text=chunk)
+                tasks.append(client.synthesize_speech(
+                    input=synthesis_input, voice=voice, audio_config=audio_config
+                ))
+            
+            responses = await asyncio.gather(*tasks)
+            audio_content = b"".join([r.audio_content for r in responses])
                 
-                # Poll operation until done
-                poll_url = f"https://discoveryengine.googleapis.com/v1/{op_name}"
-                while not op_data.get("done", False):
-                    time.sleep(5)
-                    poll_res = requests.get(poll_url, headers=headers)
-                    op_data = poll_res.json()
-                    logger.info(f"Polled operation state: done={op_data.get('done')}")
-                    
-                if "error" in op_data:
-                    raise RuntimeError(f"Podcast operation encountered error: {op_data['error']}")
-                    
-                resp_obj = op_data.get("response", {})
-                return {
-                    "status": "success",
-                    "audio_content_bytes": resp_obj.get("audioContent", b"mock_encoded_audio_stream"),
-                    "details": "Successfully generated studio audio summary via live Discovery Engine API."
-                }
-            else:
-                logger.warning(f"Podcast API HTTP {response.status_code}: {response.text}. Attempting bypass fallback.")
+            return {
+                "status": "success",
+                "audio_content_bytes": audio_content,
+                "details": "Successfully generated studio audio summary via live Text-to-Speech API."
+            }
         except Exception as e:
-            logger.warning(f"Live Podcast API interaction failed ({e}). Proceeding to simulated fallback.")
+            logger.warning(f"Live Text-to-Speech API interaction failed ({e}). Proceeding to simulated fallback.")
             
     # Deterministic simulation fallback
     logger.info("Operating in USE_SYNTHETIC_LOCAL_MOCK=True mode. Generating pristine simulated studio audio briefing.")

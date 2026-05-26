@@ -29,8 +29,10 @@ def produce_and_distribute_podcast(tool_context: ToolContext) -> dict:
         
     podcast_script = structured_brief["podcast_script"]
     
+    import asyncio
+    
     # 1. Produce Podcast Audio from structured text script property
-    pod_res = generate_podcast(podcast_script)
+    pod_res = asyncio.run(generate_podcast(podcast_script))
     if pod_res.get("status") != "success":
         return pod_res
         
@@ -44,7 +46,6 @@ def produce_and_distribute_podcast(tool_context: ToolContext) -> dict:
     # 3. Transmit notification email
     email_res = send_summary_email(signed_url, podcast_script)
     
-    # Archive final status into Memory Bank
     execution_record = {
         "audio_bytes_len": len(audio_bytes),
         "storage_uri": storage_uri,
@@ -52,6 +53,15 @@ def produce_and_distribute_podcast(tool_context: ToolContext) -> dict:
         "email_dispatched": email_res.get("dispatched")
     }
     state["last_podcast_dispatch"] = execution_record
+    
+    from ..services import get_firestore_client
+    import datetime
+    db = get_firestore_client()
+    if db:
+        doc_id = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d')
+        db.collection("wsj_podcast_runs").document(doc_id).set({
+            "podcast_metadata": execution_record
+        }, merge=True)
     
     return {
         "status": "success",

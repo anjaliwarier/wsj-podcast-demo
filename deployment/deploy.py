@@ -35,6 +35,7 @@ def create() -> None:
             "google-cloud-aiplatform[agent_engines]>=1.91.0",
             "google-genai>=0.1.0",
             "google-cloud-storage",
+            "google-cloud-texttospeech",
             "google-api-python-client",
             "google-auth",
             "requests",

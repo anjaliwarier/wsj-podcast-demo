@@ -1,4 +1,4 @@
 # Export tools to package level
-from .ingest_recent_wsj_emails import ingest_recent_wsj_emails
+from .ingest_firestore_emails import ingest_firestore_emails
 from .parse_clean_journalistic_text import parse_clean_journalistic_text
 from .produce_and_distribute_podcast import produce_and_distribute_podcast

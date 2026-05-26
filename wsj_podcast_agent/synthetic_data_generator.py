@@ -50,7 +50,7 @@ def generate_synthetic_wsj_emails() -> list[dict]:
         try:
             client = genai.Client(vertexai=True, project=project_id, location=location)
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-pro",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.2,

@@ -58,7 +58,10 @@ async def main():
             return
     except Exception as e:
         logger.warning(f"InMemoryRunner LLM invocation skipped due to runtime API authentication/model mapping: {e}. Executing explicit deterministic ADK Tool sequence.")
+        return False
+    return True
 
+def run_sync_fallback():
     # -------------------------------------------------------------------------
     # Step-by-step ADK Tool Chain simulation for 100% reliable local demonstration
     # -------------------------------------------------------------------------
@@ -69,13 +72,13 @@ async def main():
     tool_context = DummyToolContext()
     
     from wsj_podcast_agent.agent import (
-        ingest_recent_wsj_emails,
+        ingest_firestore_emails,
         parse_clean_journalistic_text,
         produce_and_distribute_podcast
     )
     
-    print("\n⚡ [Tool Call 1] ingest_recent_wsj_emails(tool_context)...")
-    res1 = ingest_recent_wsj_emails(tool_context)
+    print("\n⚡ [Tool Call 1] ingest_firestore_emails(tool_context)...")
+    res1 = ingest_firestore_emails(tool_context)
     print(json.dumps(res1, indent=2))
     
     print("\n⚡ [Tool Call 2] parse_clean_journalistic_text(tool_context)...")
@@ -95,4 +98,6 @@ async def main():
     print("="*80 + "\n")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    success = asyncio.run(main())
+    if not success:
+        run_sync_fallback()
