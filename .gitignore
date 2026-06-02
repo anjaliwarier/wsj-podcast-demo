@@ -144,3 +144,4 @@ cython_debug/
 # Audio binaries
 *.mp3
 sa-key.json
+DEMO_PLAYBOOK.md
