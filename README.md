@@ -121,3 +121,48 @@ Deploy a Cloud Scheduler job to invoke your live Reasoning Engine endpoint autom
 ```bash
 bash deployment/schedule_pipeline.sh
 ```
+
+---
+
+## ☁️ "Bring Your Own GCP" Deployment Guide
+
+If you want to deploy this architecture into your own Google Cloud environment from scratch, follow this checklist:
+
+### 1. GCP Project Setup
+1. Create a new Google Cloud Project.
+2. Enable billing on the project.
+3. Enable the following APIs:
+   - `firestore.googleapis.com` (Firestore)
+   - `storage.googleapis.com` (Cloud Storage)
+   - `texttospeech.googleapis.com` (Cloud TTS)
+   - `aiplatform.googleapis.com` (Vertex AI)
+   - `cloudscheduler.googleapis.com` (Cloud Scheduler)
+
+### 2. Firestore & Storage Initialization
+1. Navigate to **Firestore** in the GCP console. Create a Native mode database.
+2. Navigate to **Cloud Storage** and create two buckets:
+   - `your-project-news-pdfs` (For dropping inbound PDFs)
+   - `your-project-podcasts-outbound` (For storing the final `.mp3` files)
+
+### 3. Local Environment & Authentication
+1. Clone the repository and install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Authenticate the local terminal with GCP Application Default Credentials:
+   ```bash
+   gcloud auth application-default login
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+
+### 4. Configuration Updates
+1. Copy the environment template: `cp .env.example .env`
+2. Update the `.env` file with the new Project ID.
+3. Update the `seed_firestore_pdfs.py` and `services.py` files to reflect the new GCS bucket names created in Step 2.
+
+### 5. IAM Permissions
+Ensure the service account or authenticated user running the scripts has the following roles:
+- `Cloud Datastore User` (Firestore access)
+- `Storage Object Admin` (GCS Read/Write)
+- `Vertex AI User` (Gemini Inference)
+- `Service Account Token Creator` (For generating Signed URLs)
