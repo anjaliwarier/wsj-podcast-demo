@@ -90,9 +90,13 @@ pip install -r requirements.txt
 ```
 
 ### 2. Seed the Database
-Because this pipeline relies on a database queue, we first seed Firestore with synthetic emails:
+Because this pipeline relies on a database queue, we first seed Firestore with synthetic emails, or you can use your real PDFs stored in GCS:
 ```bash
+# Option A: Seed with Synthetic Emails
 python seed_firestore_emails.py
+
+# Option B: Seed with Real PDFs from GCS
+python seed_firestore_pdfs.py
 ```
 
 ### 3. Run Local Demonstration Pipeline
